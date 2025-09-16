@@ -79,11 +79,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     }
     return {
       meta: {
-        currentPage: 1,
-        itemsPerPage: 1,
-        totalItems: 1,
-        itemCount: 1,
-        totalPages: 1,
+        isFound: product ? true : false,
       },
       data: product,
       links: {
@@ -144,5 +140,25 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     }
 
     throw new NotFoundException(`Product with ID ${id} not found`);
+  }
+
+  async validateProduct(ids: number[]) {
+    ids = Array.from(new Set(ids));
+    const products = await this.product.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+
+    if (products.length !== ids.length) {
+      throw new RpcException({
+        message: 'Some products were not found',
+        status: HttpStatus.BAD_GATEWAY,
+      });
+    }
+
+    return products;
   }
 }
